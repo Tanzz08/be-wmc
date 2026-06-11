@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==============================================================
+// TABEL PENGGUNA (Admin, Resepsionis, Dokter)
+// ==============================================================
+model User {
+  id             Int          @id @default(autoincrement())
+  username       String       @unique
+  password_hash  String
+  role           Role         @default(RESEPSIONIS)
+  poli_tugas     String?      // Boleh kosong untuk Resepsionis
+
+  // Relasi
+  rekamMedis     RekamMedis[]
+  antreanDaftar  Antrean[]    @relation("UserPendaftar")
+  antreanPeriksa Antrean[]    @relation("DokterPemeriksa")
+}
+
+enum Role {
+  SUPER_ADMIN
+  RESEPSIONIS
+  DOKTER
+  APOTEKER
+}
+
+// ==============================================================
+// TABEL PASIEN
+// ==============================================================
+model Pasien {
+  id_rm         String       @id @unique  // Nomor RM: WM001234
+  nama          String
+  nik           String                    // AES Ciphertext
+  tanggal_lahir DateTime
+  jenis_kelamin String
+  alamat        String                    // AES Ciphertext
+  no_telepon    String                    // AES Ciphertext
+  waktu_daftar  DateTime     @default(now())
+  is_active     Boolean      @default(true) // FITUR SOFT DELETE
+
+  // Relasi
+  rekamMedis    RekamMedis[]
+  antrean       Antrean[]
+}
+
+// ==============================================================
+// TABEL ANTREAN
+// ==============================================================
+model Antrean {
+  nopen               String      @id @unique
+  id_rm               String
+
+  status_pasien       String
+  instalasi           String
+  unit_pelayanan      String
+  sub_unit            String?
+  cara_bayar          String
+
+  status_antrean      String      @default("TUNGGU_POLI")
+
+  // Pelacakan Waktu SLA (Service Level Agreement)
+  tgl_registrasi      DateTime    @default(now())
+  tgl_terima_poli     DateTime?
+  tgl_input_asesmen   DateTime?
+  tgl_input_tindakan  DateTime?
+  tgl_final_poli      DateTime?
+  tgl_order_resep     DateTime?
+  tgl_masuk_farmasi   DateTime?
+  tgl_selesai_farmasi DateTime?
+
+  id_user_daftar      Int
+  id_dokter           Int?
+
+  // Relasi
+  pasien              Pasien      @relation(fields: [id_rm], references: [id_rm])
+  user_daftar         User        @relation("UserPendaftar", fields: [id_user_daftar], references: [id])
+  dokter              User?       @relation("DokterPemeriksa", fields: [id_dokter], references: [id])
+  rekamMedis          RekamMedis? // Relasi 1-to-1 ke Rekam Medis
+}
+
+// ==============================================================
+// TABEL REKAM MEDIS (Sesuai Form Ringkasan Pulang Klinik WMC)
+// ==============================================================
+model RekamMedis {
+  id_pemeriksaan     Int       @id @default(autoincrement())
+  nopen              String    @unique // Terikat langsung dengan 1 Antrean
+  id_rm              String
+  id_dokter          Int
+  waktu_periksa      DateTime  @default(now())
+
+  // ------------------------------------------------------------
+  // 1. DATA ADMINISTRASI & VITAL SIGN (Plaintext - Tidak Dienkripsi)
+  // ------------------------------------------------------------
+  tgl_masuk          DateTime?
+  tgl_keluar         DateTime?
+  ruang_rawat        String?
+
+  keadaan_umum       String?   // Contoh: Lemah, Sedang
+  kesadaran          String?   // Contoh: Sadar Baik / Alert
+  tensi_darah        String?   // Contoh: 120/80 (mmHg)
+  nadi               String?   // Contoh: 110 (x/Menit)
+  napas              String?   // Contoh: 30 (x/Menit)
+  suhu               String?   // Contoh: 39.5 (oC)
+  skala_nyeri        String?   // Contoh: Tidak Ada
+
+  kondisi_keluar     String?   // Contoh: Sembuh / Belum Sembuh / Membaik
+  cara_keluar        String?   // Contoh: Diijinkan Pulang / Dirujuk
+
+  // ------------------------------------------------------------
+  // 2. DATA KLINIS SENSITIF (AES-256-CBC ENCRYPTED)
+  // ------------------------------------------------------------
+
+  // A. Anamnesis / Riwayat Penyakit
+  riwayat_sekarang   String?   @db.Text
+  riwayat_dahulu     String?   @db.Text
+  alergi             String?
+
+  // B. Pemeriksaan Objektif & Penunjang
+  pemeriksaan_fisis  String?   @db.Text
+  laboratorium       String?   @db.Text
+  radiologi          String?   @db.Text
+
+  // C. Assessment (Diagnosis & ICD)
+  diagnosis_utama    String?
+  icd10_utama        String?
+  diagnosis_sekunder String?   @db.Text
+  icd10_sekunder     String?
+
+  // D. Plan (Terapi & Tindakan)
+  terapi_pengobatan  String?   @db.Text
+  tindakan_prosedur  String?   @db.Text
+  icd9_tindakan      String?
+
+  // E. Edukasi & Follow Up
+  rencana_diet       String?
+  edukasi            String?   @db.Text
+  instruksi_pulang   String?   @db.Text
+
+  // Relasi
+  pasien             Pasien    @relation(fields: [id_rm], references: [id_rm])
+  dokter             User      @relation(fields: [id_dokter], references: [id])
+  antrean            Antrean   @relation(fields: [nopen], references: [nopen])
+}
