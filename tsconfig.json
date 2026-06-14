@@ -8,5 +8,9 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true
-  }
+  },
+
+  // TAMBAHKAN DUA BARIS INI:
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "prisma", "*.config.ts"]
 }
