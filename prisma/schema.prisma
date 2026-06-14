@@ -11,6 +11,7 @@ datasource db {
 // ==============================================================
 model User {
   id             Int          @id @default(autoincrement())
+  nama_lengkap   String?
   username       String       @unique
   password_hash  String
   role           Role         @default(RESEPSIONIS)
@@ -145,4 +146,18 @@ model RekamMedis {
   pasien             Pasien    @relation(fields: [id_rm], references: [id_rm])
   dokter             User      @relation(fields: [id_dokter], references: [id])
   antrean            Antrean   @relation(fields: [nopen], references: [nopen])
+}
+
+// ==============================================================
+// TABEL OBAT (Untuk Manajemen Farmasi)
+// ==============================================================
+model Obat {
+  id          Int      @id @default(autoincrement())
+  nama_obat   String
+  satuan      String   // Contoh: Tablet, Sirup, Ampul
+  stok        Int      @default(0)
+  harga       Decimal? // Opsional: Untuk perhitungan biaya
+  
+  // Jika kamu butuh mencatat histori keluar/masuk, bisa buat tabel relasi di sini nantinya
+  // detailResep DetailResep[]
 }

@@ -8,6 +8,8 @@ import pasienRoutes from "./routes/pasienRoutes";
 import antreanRoutes from "./routes/antreanRoutes";
 import rekamMedisRoutes from "./routes/rekamMedisRoutes";
 import farmasiRoutes from "./routes/farmasiRoutes"; // <--- Impor farmasiRoutes
+import obatRoutes from "./routes/obatRoutes"; // <--- Impor obatRoutes
+import userRoutes from "./routes/userRoutes"; // <--- Impor userRoutes
 
 dotenv.config();
 
@@ -39,14 +41,14 @@ app.use("/api/rekam-medis", rekamMedisRoutes);
 // 3. PASTIKAN BARIS INI ADA (Menyambungkan farmasiRoutes)
 app.use("/api/farmasi", farmasiRoutes); // <--- Gunakan farmasiRoutes untuk jalur /api/farmasi
 
+app.use("/api/obat", obatRoutes); // <--- Gunakan obatRoutes untuk jalur /api/obat
 
+app.use("/api/users", userRoutes);
 
 // Endpoint dasar untuk tes
 app.get("/api", (req: Request, res: Response) => {
   res.json({ message: "Selamat datang di API Klinik WMC" });
 });
-
-
 
 app.listen(PORT, () => {
   console.log(`🚀 Server backend berjalan di http://localhost:${PORT}`);

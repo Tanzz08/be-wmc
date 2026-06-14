@@ -148,14 +148,29 @@ export const updateStatusAntrean = async (
     // Objek untuk menampung data yang akan diupdate secara dinamis
     const updateData: any = { status_antrean };
 
-    // Set Timestamp otomatis berdasarkan status baru
-    if (status_antrean === "PEMERIKSAAN")
+    // =========================================================
+    // SINKRONISASI STATUS FRONTEND & BACKEND (PENANGKAP WAKTU)
+    // =========================================================
+
+    // Saat Dokter menekan tombol "Panggil & Periksa"
+    if (status_antrean === "PROSES_POLI" || status_antrean === "PEMERIKSAAN") {
       updateData.tgl_terima_poli = new Date();
-    if (status_antrean === "SELESAI_POLI")
+    }
+
+    // Saat Dokter menyelesaikan poli tanpa obat
+    if (status_antrean === "SELESAI_POLI" || status_antrean === "SELESAI") {
       updateData.tgl_final_poli = new Date();
-    if (status_antrean === "FARMASI") updateData.tgl_masuk_farmasi = new Date();
-    if (status_antrean === "OBAT_SIAP")
+    }
+
+    // (Opsional) Jika Apoteker menggunakan tombol "Proses Resep" manual
+    if (status_antrean === "FARMASI") {
+      updateData.tgl_masuk_farmasi = new Date();
+    }
+
+    // Saat Apoteker menekan tombol "Serahkan Pasien"
+    if (status_antrean === "SELESAI_FARMASI") {
       updateData.tgl_selesai_farmasi = new Date();
+    }
 
     // Jika dokter yang menerima poli, masukkan ID dokternya
     if (id_dokter) updateData.id_dokter = Number(id_dokter);

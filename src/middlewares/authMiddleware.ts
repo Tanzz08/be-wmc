@@ -36,3 +36,26 @@ export const authenticateToken = (
     });
   }
 };
+
+// Fungsi Otorisasi Role
+export const authorizeRole = (roles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    // Pastikan req.user sudah diisi oleh fungsi authenticateToken sebelumnya
+    if (!req.user) {
+      res
+        .status(401)
+        .json({ message: "Akses ditolak. User tidak teridentifikasi." });
+      return;
+    }
+
+    // Cek apakah role user saat ini ada di dalam daftar role yang diizinkan
+    if (!roles.includes(req.user.role)) {
+      res.status(403).json({
+        message: "Akses ditolak. Anda tidak memiliki izin untuk tindakan ini.",
+      });
+      return;
+    }
+
+    next(); // Lanjut ke controller jika role sesuai
+  };
+};

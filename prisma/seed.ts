@@ -8,6 +8,28 @@ async function main() {
   // Hash password 'rahasia123'
   const hashedPassword = await bcrypt.hash("rahasia123", 10);
 
+  const existingAdmin = await prisma.user.findUnique({
+    where: { username: "admin" },
+  });
+
+  if (!existingAdmin) {
+    // Hash password default (misal: "admin123")
+    const hashedPassword = await bcrypt.hash("admin123", 10);
+
+    await prisma.user.create({
+      data: {
+        username: "admin",
+        password_hash: hashedPassword,
+        role: "SUPER_ADMIN",
+      },
+    });
+    console.log("✅ Akun Super Admin berhasil dibuat!");
+    console.log("Username : admin");
+    console.log("Password : admin123");
+  } else {
+    console.log("ℹ️ Akun Super Admin sudah tersedia di database.");
+  }
+
   // Upsert: Buat jika belum ada, abaikan jika sudah ada
   await prisma.user.upsert({
     where: { username: "resepsionis1" },
