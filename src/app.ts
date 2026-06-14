@@ -21,8 +21,12 @@ app.use(express.json());
 // --- AKTIFKAN CORS SEBELUM ROUTES ---
 app.use(
   cors({
-    origin: "http://localhost:3001", // Izinkan frontend Next.js
-    credentials: true,
+    // Masukkan kedua URL: localhost untuk development, dan domain vercel untuk production
+    origin: [
+      "http://localhost:3001",
+      "https://fe-wmc.vercel.app", // <-- PASTIKAN TIDAK ADA GARIS MIRING (/) DI AKHIR URL
+    ],
+    credentials: true, // Wajib diatur true agar NextAuth dan token bisa lewat dengan aman
   }),
 );
 
