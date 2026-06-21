@@ -89,7 +89,7 @@ export const createRekamMedis = async (
           laboratorium: safeEncrypt(laboratorium),
           radiologi: safeEncrypt(radiologi),
           diagnosis_utama: safeEncrypt(diagnosis_utama),
-          icd10_utama, // Kode ICD biasanya standar global, jadi kita biarkan plaintext agar bisa difilter/statistik
+          icd10_utama,
           diagnosis_sekunder: safeEncrypt(diagnosis_sekunder),
           icd10_sekunder,
           terapi_pengobatan: safeEncrypt(terapi_pengobatan),
@@ -101,16 +101,15 @@ export const createRekamMedis = async (
         },
       });
 
-      // B. Selesaikan Antrean & Catat SLA
+      // B. Selesaikan Antrean & Catat SLA (DIUBAH KARENA APOTEKER DIHAPUS)
       await tx.antrean.update({
         where: { nopen },
         data: {
-          // Jika ada resep/terapi, status jadi TUNGGU_FARMASI. Jika tidak, langsung SELESAI.
-          status_antrean: terapi_pengobatan ? "TUNGGU_FARMASI" : "SELESAI",
-          tgl_input_asesmen: new Date(), // Catat waktu asesmen
-          tgl_input_tindakan: tindakan_prosedur ? new Date() : null, // Catat waktu tindakan jika ada
+          // Status langsung SELESAI, tidak ada lagi TUNGGU_FARMASI
+          status_antrean: "SELESAI",
+          tgl_input_asesmen: new Date(),
+          tgl_input_tindakan: tindakan_prosedur ? new Date() : null,
           tgl_final_poli: new Date(),
-          tgl_order_resep: terapi_pengobatan ? new Date() : null, // Waktu resep dikirim ke apotek
         },
       });
 
@@ -124,7 +123,6 @@ export const createRekamMedis = async (
     });
   } catch (error: any) {
     console.error("Error create rekam medis:", error);
-    // Tangani error unique constraint Prisma jika nopen sudah dipakai
     if (error.code === "P2002") {
       res
         .status(400)
@@ -141,15 +139,14 @@ export const getRekamMedisByNopen = async (
   res: Response,
 ): Promise<void> => {
   try {
-    // FIX: Penegasan tipe data "as string" agar Prisma dan TypeScript akur
     const nopen = req.params.nopen as string;
 
     const rm = await prisma.rekamMedis.findUnique({
       where: { nopen },
+      // INCLUDE TOTAL DIPERBAIKI UNTUK KEBUTUHAN CETAK PDF
       include: {
-        pasien: {
-          select: { nama: true, tanggal_lahir: true, jenis_kelamin: true },
-        },
+        pasien: true, // Ambil semua biodata pasien termasuk yang terenkripsi
+        antrean: true, // Ambil cara_bayar dari tabel antrean
         dokter: { select: { username: true } },
       },
     });
@@ -159,7 +156,7 @@ export const getRekamMedisByNopen = async (
       return;
     }
 
-    // PROSES DEKRIPSI AES
+    // PROSES DEKRIPSI AES (Sekarang mencakup biodata pasien juga)
     const decryptedRM = {
       ...rm,
       riwayat_sekarang: safeDecrypt(rm.riwayat_sekarang),
@@ -175,6 +172,13 @@ export const getRekamMedisByNopen = async (
       rencana_diet: safeDecrypt(rm.rencana_diet),
       edukasi: safeDecrypt(rm.edukasi),
       instruksi_pulang: safeDecrypt(rm.instruksi_pulang),
+
+      // Dekripsi data pasien yang menempel
+      pasien: {
+        ...rm.pasien,
+        alamat: safeDecrypt(rm.pasien.alamat),
+        no_telepon: safeDecrypt(rm.pasien.no_telepon),
+      },
     };
 
     res.status(200).json({
@@ -194,14 +198,13 @@ export const getAllRekamMedis = async (
 ): Promise<void> => {
   try {
     const rms = await prisma.rekamMedis.findMany({
-      orderBy: { waktu_periksa: "desc" }, // Urutkan dari yang terbaru
+      orderBy: { waktu_periksa: "desc" },
       include: {
         pasien: { select: { nama: true } },
         dokter: { select: { username: true } },
       },
     });
 
-    // Dekripsi hanya pada Diagnosis Utama untuk preview di tabel
     const decryptedRMs = rms.map((rm) => ({
       ...rm,
       diagnosis_utama: safeDecrypt(rm.diagnosis_utama),

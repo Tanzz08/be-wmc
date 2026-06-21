@@ -15,19 +15,18 @@ model User {
   username       String       @unique
   password_hash  String
   role           Role         @default(RESEPSIONIS)
-  poli_tugas     String?      // Boleh kosong untuk Resepsionis
+  poli_tugas     String?      
 
-  // Relasi
   rekamMedis     RekamMedis[]
   antreanDaftar  Antrean[]    @relation("UserPendaftar")
   antreanPeriksa Antrean[]    @relation("DokterPemeriksa")
 }
 
+// HAPUS APOTEKER DARI ENUM
 enum Role {
   SUPER_ADMIN
   RESEPSIONIS
   DOKTER
-  APOTEKER
 }
 
 // ==============================================================
@@ -69,18 +68,15 @@ model Antrean {
   tgl_input_asesmen   DateTime?
   tgl_input_tindakan  DateTime?
   tgl_final_poli      DateTime?
-  tgl_order_resep     DateTime?
-  tgl_masuk_farmasi   DateTime?
-  tgl_selesai_farmasi DateTime?
+  // HAPUS: tgl_order_resep, tgl_masuk_farmasi, tgl_selesai_farmasi
 
   id_user_daftar      Int
   id_dokter           Int?
 
-  // Relasi
   pasien              Pasien      @relation(fields: [id_rm], references: [id_rm])
   user_daftar         User        @relation("UserPendaftar", fields: [id_user_daftar], references: [id])
   dokter              User?       @relation("DokterPemeriksa", fields: [id_dokter], references: [id])
-  rekamMedis          RekamMedis? // Relasi 1-to-1 ke Rekam Medis
+  rekamMedis          RekamMedis? 
 }
 
 // ==============================================================

@@ -136,43 +136,27 @@ export const getAllAntrean = async (
 };
 
 // 3. UPDATE STATUS ANTREAN (Untuk Dokter / Farmasi mengupdate Timestamp SLA)
+// 3. UPDATE STATUS ANTREAN
 export const updateStatusAntrean = async (
   req: AuthRequest,
   res: Response,
 ): Promise<void> => {
   try {
-    // Gunakan "as string" untuk menegaskan tipe data kepada TypeScript
     const nopen = req.params.nopen as string;
     const { status_antrean, id_dokter } = req.body;
 
-    // Objek untuk menampung data yang akan diupdate secara dinamis
     const updateData: any = { status_antrean };
-
-    // =========================================================
-    // SINKRONISASI STATUS FRONTEND & BACKEND (PENANGKAP WAKTU)
-    // =========================================================
 
     // Saat Dokter menekan tombol "Panggil & Periksa"
     if (status_antrean === "PROSES_POLI" || status_antrean === "PEMERIKSAAN") {
       updateData.tgl_terima_poli = new Date();
     }
 
-    // Saat Dokter menyelesaikan poli tanpa obat
-    if (status_antrean === "SELESAI_POLI" || status_antrean === "SELESAI") {
+    // Saat Dokter menyimpan rekam medis (Langsung SELESAI total)
+    if (status_antrean === "SELESAI") {
       updateData.tgl_final_poli = new Date();
     }
 
-    // (Opsional) Jika Apoteker menggunakan tombol "Proses Resep" manual
-    if (status_antrean === "FARMASI") {
-      updateData.tgl_masuk_farmasi = new Date();
-    }
-
-    // Saat Apoteker menekan tombol "Serahkan Pasien"
-    if (status_antrean === "SELESAI_FARMASI") {
-      updateData.tgl_selesai_farmasi = new Date();
-    }
-
-    // Jika dokter yang menerima poli, masukkan ID dokternya
     if (id_dokter) updateData.id_dokter = Number(id_dokter);
 
     const antreanUpdate = await prisma.antrean.update({
