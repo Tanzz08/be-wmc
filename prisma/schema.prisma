@@ -34,17 +34,16 @@ enum Role {
 // TABEL PASIEN
 // ==============================================================
 model Pasien {
-  id_rm         String       @id @unique  // Nomor RM: WM001234
+  id_rm         String       @id @unique
   nama          String
-  nik           String                    // AES Ciphertext
+  // HAPUS BARIS NIK DI SINI
   tanggal_lahir DateTime
   jenis_kelamin String
-  alamat        String                    // AES Ciphertext
-  no_telepon    String                    // AES Ciphertext
+  alamat        String       // AES Ciphertext
+  no_telepon    String       // AES Ciphertext
   waktu_daftar  DateTime     @default(now())
-  is_active     Boolean      @default(true) // FITUR SOFT DELETE
+  is_active     Boolean      @default(true)
 
-  // Relasi
   rekamMedis    RekamMedis[]
   antrean       Antrean[]
 }
