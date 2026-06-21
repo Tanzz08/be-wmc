@@ -7,7 +7,6 @@ import authRoutes from "./routes/authRoutes";
 import pasienRoutes from "./routes/pasienRoutes";
 import antreanRoutes from "./routes/antreanRoutes";
 import rekamMedisRoutes from "./routes/rekamMedisRoutes";
-import farmasiRoutes from "./routes/farmasiRoutes"; // <--- Impor farmasiRoutes
 import obatRoutes from "./routes/obatRoutes"; // <--- Impor obatRoutes
 import userRoutes from "./routes/userRoutes"; // <--- Impor userRoutes
 
@@ -41,9 +40,6 @@ app.use("/api/antrean", antreanRoutes);
 
 // api rekam medis
 app.use("/api/rekam-medis", rekamMedisRoutes);
-
-// 3. PASTIKAN BARIS INI ADA (Menyambungkan farmasiRoutes)
-app.use("/api/farmasi", farmasiRoutes); // <--- Gunakan farmasiRoutes untuk jalur /api/farmasi
 
 app.use("/api/obat", obatRoutes); // <--- Gunakan obatRoutes untuk jalur /api/obat
 
