@@ -115,11 +115,11 @@ export const getAllAntrean = async (
     });
 
     // Melakukan dekripsi AES pada data pasien yang terhubung
+    // Melakukan dekripsi AES pada data pasien yang terhubung
     const decryptedAntreans = antreans.map((antrean) => ({
       ...antrean,
       pasien: {
         ...antrean.pasien,
-        nik: decryptAES(antrean.pasien.nik),
         alamat: decryptAES(antrean.pasien.alamat),
         no_telepon: decryptAES(antrean.pasien.no_telepon),
       },
